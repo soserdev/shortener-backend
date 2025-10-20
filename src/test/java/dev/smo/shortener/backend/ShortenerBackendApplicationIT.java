@@ -19,7 +19,7 @@ class ShortenerBackendApplicationIT {
 
 	@Test
 	void contextLoads() {
-		Integer keygenPort = composeContainer.getServicePort("keygenerator", 8082);
+		Integer keygenPort = composeContainer.getServicePort("keygenerator", 8081);
 		Integer redisPort = composeContainer.getServicePort("redis", 6379);
         log.info("Keygen port: {}", keygenPort);
         log.info("Redis port: {}", redisPort);

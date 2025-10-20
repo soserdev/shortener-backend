@@ -14,7 +14,9 @@ public class TestcontainersConfiguration {
     DockerComposeContainer<?> composeContainer() {
         DockerComposeContainer service = new DockerComposeContainer<>(new File("compose.yaml"))
                 .withExposedService("redis", 6379)
-                .withExposedService("keygenerator", 8082, Wait.forHttp("/actuator/health"));
+                .withExposedService("keygenerator", 8081, Wait.forHttp("/actuator/health"))
+                .withExposedService("mongo", 27017)
+                .withExposedService("urlservice", 8082, Wait.forHttp("/actuator/health"));
         return service;
     }
 

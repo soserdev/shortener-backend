@@ -1,18 +1,6 @@
-services:
-  redis:
-    image: redis:8.2.2-alpine3.22
-    ports:
-      - "6379:6379"
-  keygenerator:
-    image: soserdev/shortener-keygenerator:latest  # Built from your Dockerfile
-    ports:
-      - "8081:8080"
-    depends_on:
-      - redis
-    environment:
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+version: '3.8'
 
+services:
   mongo:
     image: mongo:7.0.11
     ports:
@@ -21,8 +9,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpw
     restart: unless-stopped
-    depends_on:
-      - keygenerator
 
   urlservice:
     image: soserdev/shortener-urlservice:latest  # Built from your Dockerfile

@@ -12,7 +12,7 @@ public class KeyGeneratorService {
 
     public KeyGeneratorService(RestClient.Builder builder,
                                @Value("${shortener.keygenerator.host:localhost}") String host,
-                               @Value("${shortener.keygenerator.port:8082}") int port) {
+                               @Value("${shortener.keygenerator.port:8081}") int port) {
         var baseUrl = String.format("http://%s:%s" , host, port);
         this.restClient = builder
                 .baseUrl(baseUrl)

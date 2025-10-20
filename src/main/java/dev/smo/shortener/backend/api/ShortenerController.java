@@ -1,6 +1,9 @@
 package dev.smo.shortener.backend.api;
 
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
+import dev.smo.shortener.backend.urlservice.UrlRequest;
+import dev.smo.shortener.backend.urlservice.UrlService;
+import dev.smo.shortener.backend.util.URLValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.InvalidUrlException;
 
 @CrossOrigin(origins = {"http://localhost:5175", "http://127.0.0.1"})
 @RestController()
@@ -15,17 +19,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShortenerController {
 
     private final KeyGeneratorService keyGeneratorService;
+    private final UrlService urlService;
 
-    public ShortenerController(KeyGeneratorService keyGeneratorService) {
+
+    public ShortenerController(KeyGeneratorService keyGeneratorService, UrlService urlService) {
         this.keyGeneratorService = keyGeneratorService;
+        this.urlService = urlService;
     }
 
     @CrossOrigin
     @PostMapping("/shorturl")
     public ResponseEntity<ResponseUrl> create(@RequestBody RequestUrl requestUrl) {
+        if (!URLValidator.isValidURL(requestUrl.url())) {
+            throw new InvalidUrlException("Invalid URL");
+        }
         var nextKey = keyGeneratorService.getNextKey();
-        var responseUrl = new ResponseUrl(nextKey.id(), requestUrl.url(), nextKey.key());
-        return new ResponseEntity<>(responseUrl, HttpStatus.OK);
+
+        var shortUrl = nextKey.key();
+        var longUrl = requestUrl.url();
+        var userId = "guest";
+
+        var urlRequest = new UrlRequest(shortUrl, longUrl, userId);
+        var urlResponse =  urlService.save(urlRequest);
+
+        var responseUrl = new ResponseUrl(urlResponse.id(), longUrl, shortUrl);
+        return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
 
 }

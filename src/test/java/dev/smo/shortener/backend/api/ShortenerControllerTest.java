@@ -3,6 +3,8 @@ package dev.smo.shortener.backend.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.smo.shortener.backend.generator.KeyGeneratorResponse;
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
+import dev.smo.shortener.backend.urlservice.UrlResponse;
+import dev.smo.shortener.backend.urlservice.UrlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -10,13 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,23 +32,28 @@ class ShortenerControllerTest {
     @MockitoBean
     KeyGeneratorService keyGeneratorService;
 
+    @MockitoBean
+    UrlService urlService;
+
     @Autowired
     ObjectMapper objectMapper;
 
     @Test
     void testCreate() throws Exception {
         var url = "https://www.manning.com/books/spring-in-action-sixth-edition";
-        var id = 4784;
         var shortUrl = "1fa";
         var requestUrl = new RequestUrl(null, url, null);
 
-        var keyGeneratorResponse = new KeyGeneratorResponse(id, shortUrl);
+        var keyGeneratorResponse = new KeyGeneratorResponse(4784L, shortUrl);
         given(keyGeneratorService.getNextKey()).willReturn(keyGeneratorResponse);
+
+        var id = UUID.randomUUID().toString();
+        given(urlService.save(any())).willReturn(new UrlResponse(id, shortUrl, url, "guest", LocalDateTime.now(), LocalDateTime.now()));
 
         mockMvc.perform(post("/shorturl")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestUrl)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(id)))
                 .andExpect(jsonPath("$.url", is(url)))
                 .andExpect(jsonPath("$.shortUrl", is(shortUrl)));
