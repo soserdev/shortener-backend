@@ -4,11 +4,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// Used for dev test :: dont forget to exec: docker compose up
 @Disabled
 @SpringBootTest
 class UrlServiceTest {
@@ -30,5 +32,10 @@ class UrlServiceTest {
         assertEquals(shortUrl, urlResponse.shortUrl());
         assertEquals(longUrl, urlResponse.longUrl());
         assertEquals(userId, urlResponse.userid());
+    }
+
+//    @Test
+    void testNotFound() throws HttpClientErrorException.NotFound {
+        assertThrows(HttpClientErrorException.NotFound.class, () -> urlService.get("123456"));
     }
 }

@@ -20,12 +20,14 @@ class UrlServiceIT {
     UrlService urlService;
 
     @Test
-    void testSave() {
+    void testSaveAndGet() {
         String shortUrl = UUID.randomUUID().toString().substring(0,7);
         String longUrl = "http://example.com";
         String userId = "007";
         var urlRequest = new UrlRequest(shortUrl, longUrl, userId);
-        var urlResponse =  urlService.save(urlRequest);
+
+        // save url
+        UrlResponse urlResponse =  urlService.save(urlRequest);
         assertThat(urlResponse).isNotNull();
         assertThat(urlResponse.id()).isNotNull();
         assertEquals(shortUrl, urlResponse.shortUrl());
@@ -33,5 +35,12 @@ class UrlServiceIT {
         assertEquals(userId, urlResponse.userid());
         assertThat(urlResponse.created()).isNotNull();
         assertThat(urlResponse.updated()).isNotNull();
+
+        // get url
+        UrlResponse urlGetResponse = urlService.get(urlResponse.shortUrl());
+        assertThat(urlGetResponse).isNotNull();
+        assertEquals(shortUrl, urlResponse.shortUrl());
+        assertEquals(longUrl, urlResponse.longUrl());
+        assertEquals(userId, urlResponse.userid());
     }
 }

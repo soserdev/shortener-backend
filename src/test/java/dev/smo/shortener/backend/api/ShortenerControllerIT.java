@@ -30,7 +30,7 @@ class ShortenerControllerIT {
     }
 
     @Test
-    void getAuthorWithExistingId() {
+    void shortenUrl() {
         var url = "http://www.example.com/test";
         var idRegex = "^[0-9a-fA-F]{24}$";
 
