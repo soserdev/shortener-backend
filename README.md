@@ -14,6 +14,12 @@ Get short url - _no redirect_:
 curl -v http://localhost:8080/shorturl/1fa
 ```
 
+Redirect to url:
+
+```bash
+curl -v http://localhost:8080/1fa
+```
+
 
 ## Docker Compose
 
@@ -116,7 +122,7 @@ urlservice> db.urls.find({ shortUrl: "1fa" })
   {
     _id: ObjectId('68f8972acaba2b2af94d00cd'),
     shortUrl: '1fa',
-    longUrl: 'https://www.manning.com/books',
+    longUrl: 'https://www.manning.com/books/spring-in-action-sixth-edition',
     userid: 'guest',
     created: ISODate('2025-10-22T08:34:50.070Z'),
     updated: ISODate('2025-10-22T08:34:50.070Z'),

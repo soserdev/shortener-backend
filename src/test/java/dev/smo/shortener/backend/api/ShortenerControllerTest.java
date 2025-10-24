@@ -16,13 +16,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.apache.http.HttpHeaders.LOCATION;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 
 @WebMvcTest(ShortenerController.class)
@@ -87,6 +88,21 @@ class ShortenerControllerTest {
         mockMvc.perform(get("/shorturl/" + shortUrl)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testRedirect() throws Exception {
+        var url = "https://www.example.com/test";
+        var shortUrl = "1fa";
+        var id = "012345670123456701234567";
+
+        UrlResponse urlResponse = new UrlResponse(id, shortUrl, url, "007", null, null);
+        given(urlService.get(any())).willReturn(urlResponse);
+
+        mockMvc.perform(get("/" + shortUrl))
+                .andExpect(status().isFound())
+                .andExpect(header().exists(LOCATION))
+                .andExpect(header().string(LOCATION, containsString(url)));
     }
 
 }

@@ -38,16 +38,15 @@ class ShortenerControllerIT {
                 .contentType(ContentType.JSON)
                 .body("{ \"url\": \"" + url + "\" }")
                 .when()
-                    .post("/shorturl")
+                .post("/shorturl")
                 .then()
-                    .statusCode(HttpStatus.CREATED.value())
-                    .contentType(ContentType.JSON)
-                    .body("id", matchesRegex(idRegex))
-                    .body("url", equalTo(url))
-                    .body("shortUrl", equalTo("1fa"))
+                .statusCode(HttpStatus.CREATED.value())
+                .contentType(ContentType.JSON)
+                .body("id", matchesRegex(idRegex))
+                .body("url", equalTo(url))
+                .body("shortUrl", equalTo("1fa"))
                 //.extract().toString(); to get the whole json as string
                 .extract().path("id");
         log.info(id);
     }
-
 }

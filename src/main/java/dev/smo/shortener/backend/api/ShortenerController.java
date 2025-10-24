@@ -10,9 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.InvalidUrlException;
 
+import java.net.URI;
+
+@Slf4j
 @CrossOrigin(origins = {"http://localhost:5175", "http://127.0.0.1"})
 @RestController()
-@Slf4j
 public class ShortenerController {
 
     private final KeyGeneratorService keyGeneratorService;
@@ -51,4 +53,10 @@ public class ShortenerController {
         return new ResponseEntity<>(responseUrl, HttpStatus.OK);
     }
 
+    @GetMapping("/{shortUrlPath:[a-zA-Z0-9]{3,6}}")
+    public ResponseEntity<Void> redirect(@PathVariable("shortUrlPath") String shortUrl){
+        var url = urlService.get(shortUrl);
+        log.info("Shortener: Redirect " + shortUrl + " -> " + url);
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url.longUrl())).build();
+    }
 }
