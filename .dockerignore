@@ -1,0 +1,9 @@
+Dockerfile
+.dockerignore
+compose.yaml
+compose-keygenerator.yaml.yml
+compose-urlservice.yaml
+.gitignore
+.gitattributes
+target
+.idea

@@ -1,5 +1,20 @@
 # SHORTENER BACKEND
 
+## About
+
+A simple Shortener Backend for a Url Shortener.
+
+This project is based upon:
+
+- Spring Boot
+- Redis
+- Testcontainers
+
+This project has dependencies to two other services:
+
+- [Shortener Urlservice](https://github.com/soserdev/shortener-urlservice)
+- [Shortener Keygenerator](https://github.com/soserdev/shortener-keygenerator)
+
 ## Test the API
 
 Shorten url:
@@ -23,10 +38,22 @@ curl -v http://localhost:8080/1fa
 
 ## Docker Compose
 
-Start the containers in background using `-d`:
+Generate Docker Image for the backend if needed:
 
 ```bash
-docker compose up -d
+docker build  -t soserdev/shortener-backend:latest -t soserdev/shortener-backend:0.0.1 -f Dockerfile .
+```
+
+Start the containers for the keygenerator and urlservice:
+
+```bash
+docker compose -f compose.yaml up
+```
+
+Start the containers for the backend, the keygenerator, and the urlservice:
+
+```bash
+docker compose -f docker-compose.yaml up
 ```
 
 Stop the containers:
@@ -35,7 +62,7 @@ Stop the containers:
 docker compose stop
 ```
 
-Stop and remove the containers
+Stop and remove the containers:
 
 ```bash
 docker compose down
