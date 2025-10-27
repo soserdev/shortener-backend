@@ -8,7 +8,10 @@ This project is based upon:
 
 - Spring Boot
 - Redis
+- Mongo
+- Docker
 - Testcontainers
+- Github Actions
 
 This project has dependencies to two other services:
 
