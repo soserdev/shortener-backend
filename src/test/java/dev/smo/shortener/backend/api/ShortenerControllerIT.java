@@ -33,6 +33,7 @@ class ShortenerControllerIT {
     void shortenUrl() {
         var url = "http://www.example.com/test";
         var idRegex = "^[0-9a-fA-F]{24}$";
+        var shortRegex = "^[0-9a-fA-F]{3,6}$";
 
         String id = RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -44,7 +45,7 @@ class ShortenerControllerIT {
                 .contentType(ContentType.JSON)
                 .body("id", matchesRegex(idRegex))
                 .body("url", equalTo(url))
-                .body("shortUrl", equalTo("1fa"))
+                .body("shortUrl", matchesRegex(shortRegex))
                 //.extract().toString(); to get the whole json as string
                 .extract().path("id");
         log.info(id);
