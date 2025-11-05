@@ -153,7 +153,7 @@ urlservice> db.urls.find({ shortUrl: "1fa" })
     _id: ObjectId('68f8972acaba2b2af94d00cd'),
     shortUrl: '1fa',
     longUrl: 'https://www.manning.com/books/spring-in-action-sixth-edition',
-    userid: 'guest',
+    userid: 'default',
     created: ISODate('2025-10-22T08:34:50.070Z'),
     updated: ISODate('2025-10-22T08:34:50.070Z'),
     _class: 'dev.smo.shortener.urlservice.model.UrlData'

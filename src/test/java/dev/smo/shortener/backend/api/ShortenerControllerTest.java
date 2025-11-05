@@ -51,7 +51,7 @@ class ShortenerControllerTest {
         given(keyGeneratorService.getNextKey()).willReturn(keyGeneratorResponse);
 
         var id = UUID.randomUUID().toString();
-        given(urlService.save(any())).willReturn(new UrlResponse(id, shortUrl, url, "guest", LocalDateTime.now(), LocalDateTime.now()));
+        given(urlService.save(any())).willReturn(new UrlResponse(id, shortUrl, url, "default", LocalDateTime.now(), LocalDateTime.now()));
 
         mockMvc.perform(post("/shorturl")
                         .contentType(MediaType.APPLICATION_JSON)
