@@ -1,6 +1,8 @@
 package dev.smo.shortener.backend.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.smo.shortener.backend.blacklist.BlacklistService;
+import dev.smo.shortener.backend.cache.ShortUrlCache;
 import dev.smo.shortener.backend.generator.KeyGeneratorResponse;
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
 import dev.smo.shortener.backend.urlservice.UrlResponse;
@@ -21,6 +23,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,6 +41,12 @@ class ShortenerControllerTest {
     @MockitoBean
     UrlService urlService;
 
+    @MockitoBean
+    BlacklistService blacklistService;
+
+    @MockitoBean
+    ShortUrlCache shortUrlCache;
+
     @Autowired
     ObjectMapper objectMapper;
 
@@ -46,9 +55,11 @@ class ShortenerControllerTest {
         var url = "https://www.example.com/test";
         var shortUrl = "1fa";
         var requestUrl = new RequestUrl(null, url, null);
-
         var keyGeneratorResponse = new KeyGeneratorResponse(4784L, shortUrl);
+
         given(keyGeneratorService.getNextKey()).willReturn(keyGeneratorResponse);
+        given(blacklistService.containsBlacklistedWord(any())).willReturn(false);
+        willDoNothing().given(shortUrlCache).setCachedUrl(any(), any(), any(), any());
 
         var id = UUID.randomUUID().toString();
         given(urlService.save(any())).willReturn(new UrlResponse(id, shortUrl, url, "default", LocalDateTime.now(), LocalDateTime.now()));
