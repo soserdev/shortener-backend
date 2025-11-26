@@ -1,4 +1,4 @@
-package dev.smo.shortener.backend.cache;
+package dev.smo.shortener.backend.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
