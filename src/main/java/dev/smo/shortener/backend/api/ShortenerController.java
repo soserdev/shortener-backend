@@ -14,7 +14,7 @@ import org.springframework.web.util.InvalidUrlException;
 import java.net.URI;
 
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5175", "http://127.0.0.1"})
+//@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:5175", "http://127.0.0.1"}) -- see CorsConfig
 @RestController()
 public class ShortenerController {
 
@@ -29,7 +29,6 @@ public class ShortenerController {
         this.shortUrlCache = shortUrlCache;
     }
 
-    @CrossOrigin
     @PostMapping("/shorturl")
     public ResponseEntity<ResponseUrl> create(@RequestBody RequestUrl requestUrl) {
         if (!URLValidator.isValidURL(requestUrl.url())) {
