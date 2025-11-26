@@ -1,5 +1,6 @@
 package dev.smo.shortener.backend.api;
 
+import dev.smo.shortener.backend.blacklist.BlacklistService;
 import dev.smo.shortener.backend.cache.ShortUrlCache;
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
 import dev.smo.shortener.backend.urlservice.UrlRequest;
@@ -20,12 +21,15 @@ public class ShortenerController {
 
     private final KeyGeneratorService keyGeneratorService;
     private final UrlService urlService;
+    private final BlacklistService blacklistService;
     private final ShortUrlCache shortUrlCache;
 
 
-    public ShortenerController(KeyGeneratorService keyGeneratorService, UrlService urlService, ShortUrlCache shortUrlCache) {
+    public ShortenerController(KeyGeneratorService keyGeneratorService, UrlService urlService,
+                               BlacklistService blacklistService, ShortUrlCache shortUrlCache) {
         this.keyGeneratorService = keyGeneratorService;
         this.urlService = urlService;
+        this.blacklistService = blacklistService;
         this.shortUrlCache = shortUrlCache;
     }
 
@@ -34,6 +38,11 @@ public class ShortenerController {
         if (!URLValidator.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
+
+        if (blacklistService.containsBlacklistedWord(requestUrl.url())) {
+            throw new InvalidUrlException("Invalid URL");
+        }
+
         var nextKey = keyGeneratorService.getNextKey();
 
         var shortUrl = nextKey.key();
