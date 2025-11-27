@@ -5,7 +5,7 @@ import dev.smo.shortener.backend.cache.ShortUrlCache;
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
 import dev.smo.shortener.backend.urlservice.UrlRequest;
 import dev.smo.shortener.backend.urlservice.UrlService;
-import dev.smo.shortener.backend.util.URLValidator;
+import dev.smo.shortener.backend.util.UrlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,11 +35,12 @@ public class ShortenerController {
 
     @PostMapping("/shorturl")
     public ResponseEntity<ResponseUrl> create(@RequestBody RequestUrl requestUrl) {
-        if (!URLValidator.isValidURL(requestUrl.url())) {
+        if (!UrlUtils.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
-
-        if (blacklistService.containsBlacklistedWord(requestUrl.url())) {
+        // check for blacklisted hosts like 'localhost'
+        var host = UrlUtils.extractHost(requestUrl.url());
+        if (blacklistService.containsBlacklistedWord(host)) {
             throw new InvalidUrlException("Invalid URL");
         }
 
@@ -83,7 +84,6 @@ public class ShortenerController {
         if (cachedUrl != null) {
             url = cachedUrl.url();
         } else {
-            // todo: yes, urlservice needs a userid in the future so we can support users with an own domain!
             var retrievedUrl = urlService.get(shortUrl);
             // put the url in the cache
             shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl(), retrievedUrl.userid());
