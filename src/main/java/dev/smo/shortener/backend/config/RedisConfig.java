@@ -1,5 +1,7 @@
 package dev.smo.shortener.backend.config;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +21,20 @@ public class RedisConfig {
 
     @Value("${spring.redis.port}")
     private int port;
+
+    @Bean
+    public RedisClient redisClient(LettuceConnectionFactory connectionFactory) {
+        if (!(connectionFactory instanceof LettuceConnectionFactory lettuceFactory)) {
+            throw new IllegalStateException("ConnectionFactory is not Lettuce");
+        }
+        RedisURI redisURI = RedisURI.builder()
+                .withHost(lettuceFactory.getHostName())
+                .withPort(lettuceFactory.getPort())
+//               .withPassword(lettuceFactory.getPassword())
+                .build();
+
+        return RedisClient.create(redisURI);
+    }
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
