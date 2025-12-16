@@ -27,9 +27,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         this.proxyManager = proxyManager;
     }
 
-    private BucketConfiguration createNewBucket() {
+    private BucketConfiguration createNewBucket(long capacity, long refill, long minutes, long initial) {
         return BucketConfiguration.builder()
-                .addLimit(limit -> limit.capacity(10).refillIntervally(10, ofMinutes(1)).initialTokens(10))
+                .addLimit(limit -> limit.capacity(capacity).refillGreedy(refill, ofMinutes(minutes)).initialTokens(initial))
+//                .addLimit(limit -> limit.capacity(10).refillIntervally(10, ofMinutes(1)).initialTokens(10))
                 .build();
     }
 
@@ -44,11 +45,21 @@ public class RateLimitFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        String clientIP = "rate-limit:" + request.getRemoteAddr();
-        Bucket bucket = proxyManager.builder().build(clientIP, this::createNewBucket);
-        if (bucket.tryConsume(1)) {
+
+        // Assure only max-rate-limit requests is allowed -- default one per second since this is a demo version:)
+        var maxRateKey = "rate-limit:max-rate-limit";
+        var bucketMax = proxyManager.builder().build(maxRateKey, createNewBucket(60, 60, 1, 60));
+        var maxLimitOk = bucketMax.tryConsume(1);
+
+        // Assure a certain ip address does not exceed its own limit
+        var clientIPKey = "rate-limit:" + request.getRemoteAddr();
+        var bucketPerIp = proxyManager.builder().build(clientIPKey, createNewBucket(10, 10, 1, 10));
+        var ipLimitOk = maxLimitOk && bucketPerIp.tryConsume(1); // consume if max-limit is not reached
+
+        if (ipLimitOk && maxLimitOk) {
             filterChain.doFilter(request, response);
         } else {
+            // Limit exceeded
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             // These must be present even on error responses
