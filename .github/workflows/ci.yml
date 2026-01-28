@@ -115,8 +115,15 @@ jobs:
         run: |
           mvn versions:set -DnextSnapshot=true -DgenerateBackupPoms=false
 
+      - name: Read next SNAPSHOT version
+        id: next-version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Commit and push version bump
         run: |
           git add pom.xml
-          git commit -m "chore: bump version to next SNAPSHOT"
+          git commit -m "chore: bump version to ${{ steps.next-version.outputs.version }}"
           git push
+
