@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 
 import static java.time.Duration.ofMinutes;
 
+@Slf4j
 @Profile("!test")
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -29,8 +31,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private BucketConfiguration createNewBucket(long capacity, long refill, long minutes, long initial) {
         return BucketConfiguration.builder()
-                .addLimit(limit -> limit.capacity(capacity).refillGreedy(refill, ofMinutes(minutes)).initialTokens(initial))
-//                .addLimit(limit -> limit.capacity(10).refillIntervally(10, ofMinutes(1)).initialTokens(10))
+                .addLimit(limit -> limit.capacity(capacity).refillIntervally(refill, ofMinutes(minutes)).initialTokens(initial))
                 .build();
     }
 
@@ -46,17 +47,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Assure only max-rate-limit requests is allowed -- default one per second since this is a demo version:)
-        var maxRateKey = "rate-limit:max-rate-limit";
-        var bucketMax = proxyManager.builder().build(maxRateKey, createNewBucket(60, 60, 1, 60));
-        var maxLimitOk = bucketMax.tryConsume(1);
-
         // Assure a certain ip address does not exceed its own limit
         var clientIPKey = "rate-limit:" + request.getRemoteAddr();
-        var bucketPerIp = proxyManager.builder().build(clientIPKey, createNewBucket(10, 10, 1, 10));
-        var ipLimitOk = maxLimitOk && bucketPerIp.tryConsume(1); // consume if max-limit is not reached
+        var bucketPerIp = proxyManager.builder().build(clientIPKey, createNewBucket(120, 120, 1, 60));
+        var ipLimitOk = bucketPerIp.tryConsume(1); // consume if max-limit is not reached
 
-        if (ipLimitOk && maxLimitOk) {
+        long remainingTokens = bucketPerIp.getAvailableTokens();
+        log.info("IP: " + request.getRemoteAddr() + " Available Tokes: " + remainingTokens);
+
+        if (ipLimitOk) {
             filterChain.doFilter(request, response);
         } else {
             // Limit exceeded
