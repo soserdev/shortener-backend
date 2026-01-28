@@ -7,6 +7,7 @@ import dev.smo.shortener.backend.urlservice.UrlRequest;
 import dev.smo.shortener.backend.urlservice.UrlService;
 import dev.smo.shortener.backend.util.UrlUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +79,6 @@ public class ShortenerController {
     public ResponseEntity<Void> redirect(@PathVariable("shortUrlPath") String shortUrl){
         var userId = "default";
         final String url;
-
         var cachedUrl = shortUrlCache.getCachedUrl(shortUrl, userId);
         if (cachedUrl != null) {
             url = cachedUrl.url();
@@ -89,6 +89,10 @@ public class ShortenerController {
             url = retrievedUrl.longUrl();
         }
         log.info("Shortener: Redirect " + shortUrl + " -> " + url);
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
+        return ResponseEntity
+                .status(HttpStatus.FOUND) // .status(HttpStatus.MOVED_PERMANENTLY)
+                .header(HttpHeaders.LOCATION, url)
+                .build();
+
     }
 }

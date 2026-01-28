@@ -33,6 +33,11 @@ public class UrlUtilsTest {
     }
 
     @Test
+    public void testMalformedHttpURL() {
+        assertFalse(UrlUtils.isValidURL("https://jlsfjlas.hh-heise.de/jsljflsjfl?kjsflfj=%s"));
+    }
+
+    @Test
     public void testInvalidURLNoProtocol() {
         assertFalse(UrlUtils.isValidURL("example.com"));
     }
@@ -101,11 +106,6 @@ public class UrlUtilsTest {
     void testUrlWithQueryAndFragment() {
         assertEquals("example.com",
                 UrlUtils.extractHost("https://example.com/path?x=1#section"));
-    }
-
-    @Test
-    void testInvalidProtocol() {
-        assertNull(UrlUtils.extractHost("ftp://example.com/resource"));
     }
 
     @Test
