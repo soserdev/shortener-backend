@@ -76,6 +76,28 @@ class ShortenerControllerTest {
     }
 
     @Test
+    void testCreateMalformedUrl() throws Exception {
+        var url = "https://jlsfjlas.hh-heise.de/jsljflsjfl?kjsflfj=%s/";
+        var requestUrl = new RequestUrl(null, url, null);
+
+        mockMvc.perform(post("/shorturl")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestUrl)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testCreateUrlTooLong() throws Exception {
+        var url = "https://example.com/" + "a".repeat(2050);
+        var requestUrl = new RequestUrl(null, url, null);
+
+        mockMvc.perform(post("/shorturl")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestUrl)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void testGetShortUrl() throws Exception {
         var url = "https://www.example.com/test";
         var shortUrl = "1fa";
@@ -117,5 +139,4 @@ class ShortenerControllerTest {
                 .andExpect(header().exists(LOCATION))
                 .andExpect(header().string(LOCATION, containsString(url)));
     }
-
 }

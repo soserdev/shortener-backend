@@ -6,6 +6,7 @@ import dev.smo.shortener.backend.generator.KeyGeneratorService;
 import dev.smo.shortener.backend.urlservice.UrlRequest;
 import dev.smo.shortener.backend.urlservice.UrlService;
 import dev.smo.shortener.backend.util.UrlUtils;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class ShortenerController {
     }
 
     @PostMapping("/shorturl")
-    public ResponseEntity<ResponseUrl> create(@RequestBody RequestUrl requestUrl) {
+    public ResponseEntity<ResponseUrl> create(@Valid @RequestBody RequestUrl requestUrl) {
         if (!UrlUtils.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
