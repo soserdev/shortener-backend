@@ -34,7 +34,7 @@ public class ShortUrlCache {
                 + ", \"shorturl\": \"" + shortUrl  + "\""
                 + ", \"url\": \"" + longUrl + "\""
                 + "}";
-        log.info("Set Cached Url: {}", value);
+        // log.info("Set Cached Url: {}", value);
         redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
     }
 
@@ -44,7 +44,7 @@ public class ShortUrlCache {
         if (null == json) {
             return null;
         }
-        log.info("Get Cached Url: {}", json);
+        // log.info("Get Cached Url: {}", json);
         try {
             return objectMapper.readValue(json, CachedUrl.class);
         } catch (Exception e) {

@@ -14,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.InvalidUrlException;
 
-import java.net.URI;
-
 @Slf4j
 @RestController()
 public class ShortenerController {
@@ -57,6 +55,8 @@ public class ShortenerController {
         shortUrlCache.setCachedUrl(urlResponse.id(), urlResponse.shortUrl(), urlResponse.longUrl(), urlResponse.userid());
 
         var responseUrl = new ResponseUrl(urlResponse.id(), longUrl, shortUrl);
+        log.info("CREATE: " + responseUrl);
+
         return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
 
@@ -71,7 +71,7 @@ public class ShortenerController {
             var url = urlService.get(shortUrl);
             responseUrl = new ResponseUrl(url.id(), url.longUrl(), url.shortUrl());
             shortUrlCache.setCachedUrl(url.id(), url.shortUrl(), url.longUrl(), url.userid());
-            log.info("Shortener: GET " + shortUrl + " -> " + url);
+            log.info("GET " + shortUrl + " -> " + url);
         }
         return new ResponseEntity<>(responseUrl, HttpStatus.OK);
     }
@@ -89,7 +89,7 @@ public class ShortenerController {
             shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl(), retrievedUrl.userid());
             url = retrievedUrl.longUrl();
         }
-        log.info("Shortener: Redirect " + shortUrl + " -> " + url);
+        log.info("REDIRECT: " + shortUrl + " -> " + url);
         return ResponseEntity
                 .status(HttpStatus.FOUND) // .status(HttpStatus.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, url)
