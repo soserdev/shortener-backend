@@ -75,11 +75,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         var ipLimitOk = bucketPerIp.tryConsume(1); // consume if max-limit is not reached
 
         long remainingTokens = bucketPerIp.getAvailableTokens();
-        log.info("RATE-LIMIT-IP: " + clientIP + " Available Tokens: " + remainingTokens);
 
         if (ipLimitOk) {
             filterChain.doFilter(request, response);
         } else {
+            log.info("RATE-LIMIT-IP: " + clientIP + " Available Tokens: " + remainingTokens);
             // Limit exceeded
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");

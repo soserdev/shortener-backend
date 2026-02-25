@@ -33,7 +33,8 @@ public class ShortenerController {
     }
 
     @PostMapping("/shorturl")
-    public ResponseEntity<ResponseUrl> create(@Valid @RequestBody RequestUrl requestUrl) {
+    public ResponseEntity<ResponseUrl> create(@Valid @RequestBody RequestUrl requestUrl,
+                                              @RequestHeader(value = "X-Forwarded-User", required = false) String username) {
         if (!UrlUtils.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
@@ -55,7 +56,7 @@ public class ShortenerController {
         shortUrlCache.setCachedUrl(urlResponse.id(), urlResponse.shortUrl(), urlResponse.longUrl(), urlResponse.userid());
 
         var responseUrl = new ResponseUrl(urlResponse.id(), longUrl, shortUrl);
-        log.info("CREATE: " + responseUrl);
+        log.info("CREATE - USER: " + username + " SHORTURL: " + responseUrl);
 
         return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
