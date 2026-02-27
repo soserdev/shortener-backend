@@ -1,6 +1,5 @@
 package dev.smo.shortener.backend.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.smo.shortener.backend.blacklist.BlacklistService;
 import dev.smo.shortener.backend.cache.ShortUrlCache;
 import dev.smo.shortener.backend.generator.KeyGeneratorResponse;
@@ -9,22 +8,23 @@ import dev.smo.shortener.backend.urlservice.UrlResponse;
 import dev.smo.shortener.backend.urlservice.UrlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.apache.http.HttpHeaders.LOCATION;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
