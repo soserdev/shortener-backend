@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.InvalidUrlException;
 
@@ -34,7 +36,8 @@ public class ShortenerController {
 
     @PostMapping("/shorturl")
     public ResponseEntity<ResponseUrl> create(@Valid @RequestBody RequestUrl requestUrl,
-                                              @RequestHeader(value = "X-Forwarded-User", required = false) String username) {
+                                              @AuthenticationPrincipal Jwt jwt,
+                                              @RequestHeader(value = "X-Forwarded-User",required = false) String username) {
         if (!UrlUtils.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
@@ -44,11 +47,19 @@ public class ShortenerController {
             throw new InvalidUrlException("Invalid URL");
         }
 
+        var userId = "default";
+        if (username != null) {
+            userId = username;
+        }
+        if (jwt != null) {
+            userId = jwt.getSubject();
+            log.info("Username: "+ userId);
+        }
+
         var nextKey = keyGeneratorService.getNextKey();
 
         var shortUrl = nextKey.key();
         var longUrl = requestUrl.url();
-        var userId = "default";
 
         var urlRequest = new UrlRequest(shortUrl, longUrl, userId);
         var urlResponse =  urlService.save(urlRequest);
@@ -56,7 +67,7 @@ public class ShortenerController {
         shortUrlCache.setCachedUrl(urlResponse.id(), urlResponse.shortUrl(), urlResponse.longUrl(), urlResponse.userid());
 
         var responseUrl = new ResponseUrl(urlResponse.id(), longUrl, shortUrl);
-        log.info("CREATE - USER: " + username + " SHORTURL: " + responseUrl);
+        log.info("CREATE - USER: " + userId + " SHORTURL: " + responseUrl);
 
         return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
