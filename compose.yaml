@@ -25,13 +25,13 @@ services:
       - keygenerator
 
   urlservice:
-    image: soserdev/shortener-urlservice:latest  # Built from your Dockerfile
+    image: soserdev/shortener-urlservice:latest
     ports:
       - "8082:8080"
     depends_on:
       - mongo
     environment:
       SERVER_PORT: 8080
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_MONGODB_HOST: mongo
     restart: unless-stopped
