@@ -1,11 +1,12 @@
 package dev.smo.shortener.backend.urlservice;
 
-import dev.smo.shortener.backend.generator.KeyGeneratorResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Service
 public class UrlService {
@@ -23,19 +24,18 @@ public class UrlService {
     }
 
     public UrlResponse save(UrlRequest urlRequest) {
-        UrlResponse response = restClient.post()
-                .uri("/api/v1/urlservice")
+        return restClient.post()
+                .uri("/api/v1/urls")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(urlRequest)
                 .retrieve()
                 .body(UrlResponse.class);
-        return response;
     }
 
     public UrlResponse get(String shortUrl) {
-        UrlResponse response = restClient.get()
-                .uri("/api/v1/urlservice/" + shortUrl)
+        return restClient.get()
+                .uri("/api/v1/urls/short/" + shortUrl)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(UrlResponse.class);

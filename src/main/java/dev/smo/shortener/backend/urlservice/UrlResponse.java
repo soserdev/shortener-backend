@@ -6,7 +6,7 @@ public record UrlResponse(
         String id,
         String shortUrl,
         String longUrl,
-        String userid,
+        String user,
         LocalDateTime created,
         LocalDateTime updated) {
 }

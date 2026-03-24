@@ -4,6 +4,7 @@ import dev.smo.shortener.backend.blacklist.BlacklistService;
 import dev.smo.shortener.backend.cache.ShortUrlCache;
 import dev.smo.shortener.backend.generator.KeyGeneratorService;
 import dev.smo.shortener.backend.urlservice.UrlRequest;
+import dev.smo.shortener.backend.urlservice.UrlResponse;
 import dev.smo.shortener.backend.urlservice.UrlService;
 import dev.smo.shortener.backend.util.UrlUtils;
 import jakarta.validation.Valid;
@@ -11,10 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.InvalidUrlException;
+
+import java.util.List;
 
 @Slf4j
 @RestController()
@@ -61,31 +63,23 @@ public class ShortenerController {
         var shortUrl = nextKey.key();
         var longUrl = requestUrl.url();
 
-        var urlRequest = new UrlRequest(shortUrl, longUrl, userId);
+        var urlRequest = new UrlRequest(shortUrl, longUrl, user);
         var urlResponse =  urlService.save(urlRequest);
 
-        shortUrlCache.setCachedUrl(urlResponse.id(), urlResponse.shortUrl(), urlResponse.longUrl(), urlResponse.userid());
+        shortUrlCache.setCachedUrl(urlResponse.id(), urlResponse.shortUrl(), urlResponse.longUrl(), urlResponse.user());
 
-        var responseUrl = new ResponseUrl(urlResponse.id(), longUrl, shortUrl);
-        log.info("CREATE - USER: " + userId + " SHORTURL: " + responseUrl);
+        var responseUrl = mapToResponseUrl(urlResponse);
+        log.info("CREATE - USER: " + user + " SHORTURL: " + responseUrl);
 
         return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
 
     @GetMapping("/shorturl/{shortUrl:[a-zA-Z0-9]{3,6}}")
     public ResponseEntity<ResponseUrl> getUrl(@PathVariable("shortUrl") String shortUrl) {
-        var userId = "default";
-        var cachedUrl = shortUrlCache.getCachedUrl(shortUrl, userId);
-        ResponseUrl responseUrl;
-        if (cachedUrl != null) {
-            responseUrl = new ResponseUrl(cachedUrl.id(), cachedUrl.url(), cachedUrl.shortUrl());
-        } else {
-            var url = urlService.get(shortUrl);
-            responseUrl = new ResponseUrl(url.id(), url.longUrl(), url.shortUrl());
-            shortUrlCache.setCachedUrl(url.id(), url.shortUrl(), url.longUrl(), url.userid());
-            log.info("GET " + shortUrl + " -> " + url);
-        }
-        return new ResponseEntity<>(responseUrl, HttpStatus.OK);
+
+        var url = urlService.get(shortUrl);
+        log.info("GET " + shortUrl + " -> " + url);
+        return ResponseEntity.ok(mapToResponseUrl(url));
     }
 
     @GetMapping("/{shortUrlPath:[a-zA-Z0-9]{3,6}}")
@@ -98,7 +92,7 @@ public class ShortenerController {
         } else {
             var retrievedUrl = urlService.get(shortUrl);
             // put the url in the cache
-            shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl(), retrievedUrl.userid());
+            shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl(), retrievedUrl.user());
             url = retrievedUrl.longUrl();
         }
         log.info("REDIRECT: " + shortUrl + " -> " + url);
@@ -107,5 +101,16 @@ public class ShortenerController {
                 .header(HttpHeaders.LOCATION, url)
                 .build();
 
+    }
+
+    public ResponseUrl mapToResponseUrl(UrlResponse url) {
+        return new ResponseUrl(
+                url.id(),
+                url.longUrl(),
+                url.shortUrl(),
+                url.user(),
+                url.created(),
+                url.updated()
+        );
     }
 }

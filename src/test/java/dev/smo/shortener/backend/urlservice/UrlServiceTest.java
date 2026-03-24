@@ -1,7 +1,6 @@
 package dev.smo.shortener.backend.urlservice;
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.client.HttpClientErrorException;
@@ -31,7 +30,7 @@ class UrlServiceTest {
         assertNotNull(urlResponse.updated());
         assertEquals(shortUrl, urlResponse.shortUrl());
         assertEquals(longUrl, urlResponse.longUrl());
-        assertEquals(userId, urlResponse.userid());
+        assertEquals(userId, urlResponse.user());
     }
 
 //    @Test
