@@ -36,8 +36,8 @@ public class ShortenerController {
 
     @PostMapping("/shorturl")
     public ResponseEntity<ResponseUrl> create(@Valid @RequestBody RequestUrl requestUrl,
-                                              @AuthenticationPrincipal Jwt jwt,
-                                              @RequestHeader(value = "X-Forwarded-User",required = false) String username) {
+                                              Authentication authentication,
+                                              @RequestHeader(value = "X-Forwarded-User",required = false) String forwardedUser) {
         if (!UrlUtils.isValidURL(requestUrl.url())) {
             throw new InvalidUrlException("Invalid URL");
         }
@@ -47,13 +47,13 @@ public class ShortenerController {
             throw new InvalidUrlException("Invalid URL");
         }
 
-        var userId = "default";
-        if (username != null) {
-            userId = username;
+        var user = "default";
+        if (forwardedUser != null) {
+            user = forwardedUser;
         }
-        if (jwt != null) {
-            userId = jwt.getSubject();
-            log.info("Username: "+ userId);
+        if (authentication != null) {
+            user = authentication.getName();
+            log.info("USER NAME: " + user);
         }
 
         var nextKey = keyGeneratorService.getNextKey();

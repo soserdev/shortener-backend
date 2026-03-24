@@ -25,10 +25,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.http.HttpHeaders.LOCATION;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 
 @ActiveProfiles("test")
 @WebMvcTest(ShortenerController.class)
@@ -81,6 +81,7 @@ class ShortenerControllerTest {
         var requestUrl = new RequestUrl(null, url, null);
 
         mockMvc.perform(post("/shorturl")
+                        .with(jwt().jwt(jwt -> jwt.subject("john")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestUrl)))
                 .andExpect(status().isBadRequest());
