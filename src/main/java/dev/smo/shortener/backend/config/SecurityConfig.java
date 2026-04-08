@@ -1,5 +1,7 @@
 package dev.smo.shortener.backend.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -20,6 +22,13 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CorsConfig corsConfig;
+
+    @Value("${app.oauth2.jwks.endpoint}")
+    private String jwksEndpoint;
+
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -48,7 +57,7 @@ public class SecurityConfig {
 
     @Bean
     JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri("http://localhost:9000/oauth2/jwks")
+        return NimbusJwtDecoder.withJwkSetUri(jwksEndpoint)
                 .build();
     }
 
@@ -66,10 +75,9 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:4200",
-                "http://localhost:5175"
-        ));
+        configuration.setAllowedOrigins(
+                corsConfig.getAllowedOrigins()
+        );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Custom-Header"));
         configuration.setAllowCredentials(true);

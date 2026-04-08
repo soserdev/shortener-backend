@@ -28,4 +28,8 @@ public class CorsConfig {
             }
         };
     }
+
+    public List<String> getAllowedOrigins() {
+        return allowedOrigins;
+    }
 }
