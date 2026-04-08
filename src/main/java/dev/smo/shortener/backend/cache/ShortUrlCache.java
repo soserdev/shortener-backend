@@ -28,8 +28,9 @@ public class ShortUrlCache {
         this.objectMapper = objectMapper;
     }
 
-    public void setCachedUrl(String id, String shortUrl, String longUrl, String userid) {
-        var key = CACHE_PREFIX + userid + ":" + shortUrl;
+    // cache the url without a protocol...
+    public void setCachedUrl(String id, String shortUrl, String longUrl) {
+        var key = CACHE_PREFIX + shortUrl;
         var value = "{ \"id\": \"" + id + "\""
                 + ", \"shorturl\": \"" + shortUrl  + "\""
                 + ", \"url\": \"" + longUrl + "\""
@@ -38,8 +39,9 @@ public class ShortUrlCache {
         redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
     }
 
-    public CachedUrl getCachedUrl(String shortUrl, String userid) {
-        var key = CACHE_PREFIX + userid + ":" + shortUrl;
+    // get the cached url like getCachedUrl("snib.me/1fa")
+    public CachedUrl getCachedUrl(String shortUrl) {
+        var key = CACHE_PREFIX + shortUrl;
         final String json = redisTemplate.opsForValue().getAndExpire(key, timeout, TimeUnit.SECONDS);
         if (null == json) {
             return null;

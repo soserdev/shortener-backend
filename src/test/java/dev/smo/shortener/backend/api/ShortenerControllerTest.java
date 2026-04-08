@@ -61,10 +61,10 @@ class ShortenerControllerTest {
 
         given(keyGeneratorService.getNextKey()).willReturn(keyGeneratorResponse);
         given(blacklistService.containsBlacklistedWord(any())).willReturn(false);
-        willDoNothing().given(shortUrlCache).setCachedUrl(any(), any(), any(), any());
+        willDoNothing().given(shortUrlCache).setCachedUrl(any(), any(), any());
 
         var id = UUID.randomUUID().toString();
-        given(urlService.save(any())).willReturn(new UrlResponse(id, shortUrl, url, "default", LocalDateTime.now(), LocalDateTime.now()));
+        given(urlService.save(any(), any(), any())).willReturn(new UrlResponse(id, shortUrl, url, "default", LocalDateTime.now(), LocalDateTime.now()));
 
         mockMvc.perform(post("/shorturl")
                         .contentType(MediaType.APPLICATION_JSON)
