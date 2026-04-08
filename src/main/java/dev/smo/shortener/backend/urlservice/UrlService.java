@@ -17,13 +17,17 @@ public class UrlService {
     public UrlService(RestClient.Builder builder,
                       @Value("${shortener.urlservice.host:localhost}") String host,
                       @Value("${shortener.urlservice.port:8082}") int port) {
+
         var baseUrl = String.format("http://%s:%s", host, port);
         this.restClient = builder
                 .baseUrl(baseUrl)
                 .build();
     }
 
-    public UrlResponse save(UrlRequest urlRequest) {
+
+    public UrlResponse save(String shortUrl, String longUrl, String user) {
+
+        var urlRequest = new UrlRequest(shortUrl, longUrl, user);
         return restClient.post()
                 .uri("/api/v1/urls")
                 .accept(MediaType.APPLICATION_JSON)
@@ -39,6 +43,20 @@ public class UrlService {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(UrlResponse.class);
-        return response;
     }
+
+    public List<UrlResponse> findAll(String user) {
+        return restClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/api/v1/urls");
+                    if (user != null) {
+                        uriBuilder.queryParam("user", user);
+                    }
+                    return uriBuilder.build();
+                })
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<UrlResponse>>() {});
+    }
+
 }

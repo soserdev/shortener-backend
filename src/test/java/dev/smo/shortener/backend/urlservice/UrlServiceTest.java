@@ -22,8 +22,7 @@ class UrlServiceTest {
         String shortUrl = UUID.randomUUID().toString().substring(0,7);
         String longUrl = "http://example.com";
         String userId = "007";
-        var urlRequest = new UrlRequest(shortUrl, longUrl, userId);
-        var urlResponse =  urlService.save(urlRequest);
+        var urlResponse =  urlService.save(shortUrl, longUrl, userId);
         assertNotNull(urlResponse);
         assertNotNull(urlResponse.id());
         assertNotNull(urlResponse.created());
