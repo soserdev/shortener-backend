@@ -21,6 +21,7 @@ public class ShortenerExceptionHandler {
     @ExceptionHandler({HttpClientErrorException.NotFound.class})
     public ResponseEntity<Object> handleUrlNotFound(Exception ex, WebRequest request) {
         var apiError = new ShortenerApiError(String.valueOf(HttpStatus.NOT_FOUND.value()), "Not Found", "The provided URL is not found");
+        log.debug(ex.getMessage(), ex);
         return new ResponseEntity<>(apiError, new HttpHeaders(), HttpStatus.NOT_FOUND);
     }
 

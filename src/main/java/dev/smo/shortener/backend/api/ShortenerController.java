@@ -22,9 +22,6 @@ import java.util.List;
 @RestController()
 public class ShortenerController {
 
-    @Value("${app.host}")
-    private String host;
-
     private final KeyGeneratorService keyGeneratorService;
     private final UrlService urlService;
     private final BlacklistService blacklistService;
@@ -46,8 +43,8 @@ public class ShortenerController {
             throw new InvalidUrlException("Invalid URL");
         }
         // check for blacklisted hosts like 'localhost'
-        var host = UrlUtils.extractHost(requestUrl.url());
-        if (blacklistService.containsBlacklistedWord(host)) {
+        var hostToCheck = UrlUtils.extractHost(requestUrl.url());
+        if (blacklistService.containsBlacklistedWord(hostToCheck)) {
             throw new InvalidUrlException("Invalid URL");
         }
 
@@ -78,7 +75,7 @@ public class ShortenerController {
     // generate a new short url in the form "snib.me/1fa"...
     private String generateNewShortUrl() {
         var nextKey = keyGeneratorService.getNextKey();
-        return host + "/" + nextKey.key();
+        return nextKey.key();
     }
 
     @GetMapping("/shorturl")
@@ -105,20 +102,22 @@ public class ShortenerController {
     }
 
     @GetMapping("/{shortUrlPath:[a-zA-Z0-9]{3,6}}")
-    public ResponseEntity<Void> redirect(@PathVariable("shortUrlPath") String shortUrlPath) {
+    public ResponseEntity<Void> redirect(@PathVariable("shortUrlPath") String shortUrl) {
 
         final String url;
-        var shortUrl = host + "/" + shortUrlPath;
+        log.info("REDIRECT    : " + shortUrl);
         var cachedUrl = shortUrlCache.getCachedUrl(shortUrl);
+        log.debug("REDIRECT (2): CACHE URL: " + cachedUrl);
         if (cachedUrl != null) {
             url = cachedUrl.url();
         } else {
             var retrievedUrl = urlService.get(shortUrl);
+            log.debug("REDIRECT (3): " + retrievedUrl);
             // put the url in the cache
             shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl());
             url = retrievedUrl.longUrl();
         }
-        log.info("REDIRECT: " + shortUrl + " -> " + url);
+        log.debug("REDIRECT (4): " + shortUrl + " -> " + url);
         return ResponseEntity
                 .status(HttpStatus.FOUND) // .status(HttpStatus.MOVED_PERMANENTLY)
                 .header(HttpHeaders.LOCATION, url)
