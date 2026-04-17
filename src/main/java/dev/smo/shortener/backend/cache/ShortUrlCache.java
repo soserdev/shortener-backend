@@ -53,4 +53,15 @@ public class ShortUrlCache {
             throw new RuntimeException("Failed to parse JSON", e);
         }
     }
+
+    public void removeCachedUrl(String shortUrl) {
+        var key = CACHE_PREFIX + shortUrl;
+        Boolean deleted = redisTemplate.delete(key);
+
+        if (Boolean.TRUE.equals(deleted)) {
+            log.info("Removed cached URL for key: {}", key);
+        } else {
+            log.warn("No cached URL found to remove for key: {}", key);
+        }
+    }
 }

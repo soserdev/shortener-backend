@@ -8,6 +8,7 @@ public record ResponseUrl (
         String url,
         String shortUrl,
         String user,
+        String status,
         LocalDateTime created,
         LocalDateTime updated) {
 

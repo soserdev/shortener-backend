@@ -7,18 +7,20 @@ import dev.smo.shortener.backend.urlservice.UrlResponse;
 import dev.smo.shortener.backend.urlservice.UrlService;
 import dev.smo.shortener.backend.util.UrlUtils;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.InvalidUrlException;
 
 import java.util.List;
 
 @Slf4j
+@Validated
 @RestController()
 public class ShortenerController {
 
@@ -48,17 +50,7 @@ public class ShortenerController {
             throw new InvalidUrlException("Invalid URL");
         }
 
-        var user = "default";
-        // check for forwarded user which is set by traefik basic auth...
-        if (forwardedUser != null) {
-            user = forwardedUser;
-        }
-        // check for authenticated user and replace with his name...
-        if (authentication != null) {
-            user = authentication.getName();
-            log.info("USER NAME: " + user);
-        }
-
+        var user = resolveUser(authentication, forwardedUser);
         var shortUrl = generateNewShortUrl();
         var longUrl = requestUrl.url();
 
@@ -72,10 +64,24 @@ public class ShortenerController {
         return new ResponseEntity<>(responseUrl, HttpStatus.CREATED);
     }
 
-    // generate a new short url in the form "snib.me/1fa"...
-    private String generateNewShortUrl() {
-        var nextKey = keyGeneratorService.getNextKey();
-        return nextKey.key();
+    @PutMapping("/shorturl/id/{id}")
+    public ResponseEntity<ResponseUrl> update(@PathVariable("id") @NotBlank(message = "id should not be null or empty")  String id,
+                                              @Valid @RequestBody RequestUrl requestUrl,
+                                              Authentication authentication) {
+        var user = "default";
+
+        // authentication should not be null since we configured that in the security config!
+        user = authentication.getName();
+
+        var status = requestUrl.status();
+
+        var urlResponse = urlService.update(id, user, status);
+        shortUrlCache.removeCachedUrl(urlResponse.shortUrl());
+
+        var responseUrl = mapToResponseUrl(urlResponse);
+        log.info("UPDATE - URL: " + user + " SHORTURL: " + responseUrl);
+
+        return ResponseEntity.ok(responseUrl);
     }
 
     @GetMapping("/shorturl")
@@ -91,7 +97,6 @@ public class ShortenerController {
         return ResponseEntity.ok(urlService.findAll(user)
                 .stream().map(this::mapToResponseUrl).toList());
     }
-
 
     @GetMapping("/shorturl/{shortUrl:[a-zA-Z0-9]{3,6}}")
     public ResponseEntity<ResponseUrl> getUrl(@PathVariable("shortUrl") String shortUrl) {
@@ -112,6 +117,12 @@ public class ShortenerController {
             url = cachedUrl.url();
         } else {
             var retrievedUrl = urlService.get(shortUrl);
+
+            if (retrievedUrl != null && !"active".equals(retrievedUrl.status())) {
+                throw new UrlNotFoundException(
+                        "The provided URL is not found"
+                );
+            }
             log.debug("REDIRECT (3): " + retrievedUrl);
             // put the url in the cache
             shortUrlCache.setCachedUrl(retrievedUrl.id(), retrievedUrl.shortUrl(), retrievedUrl.longUrl());
@@ -125,12 +136,25 @@ public class ShortenerController {
 
     }
 
-    public ResponseUrl mapToResponseUrl(UrlResponse url) {
+    // generate a new short url in the form "snib.me/1fa"...
+    private String generateNewShortUrl() {
+        var nextKey = keyGeneratorService.getNextKey();
+        return nextKey.key();
+    }
+
+    private String resolveUser(Authentication auth, String forwardedUser) {
+        if (auth != null) return auth.getName();
+        if (forwardedUser != null) return forwardedUser;
+        return "default"; // ""anonymous";
+    }
+
+    private ResponseUrl mapToResponseUrl(UrlResponse url) {
         return new ResponseUrl(
                 url.id(),
                 url.longUrl(),
                 url.shortUrl(),
                 url.user(),
+                url.status(),
                 url.created(),
                 url.updated()
         );

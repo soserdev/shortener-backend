@@ -1,6 +1,7 @@
 package dev.smo.shortener.backend.api;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.InvalidUrlException;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,11 +20,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class ShortenerExceptionHandler {
 
-    @ExceptionHandler({HttpClientErrorException.NotFound.class})
+    @Value("${app.endpoint.notfound}")
+    private String notFoundEndpoint;
+
+
+    @ExceptionHandler({HttpClientErrorException.NotFound.class, UrlNotFoundException.class})
     public ResponseEntity<Object> handleUrlNotFound(Exception ex, WebRequest request) {
-        var apiError = new ShortenerApiError(String.valueOf(HttpStatus.NOT_FOUND.value()), "Not Found", "The provided URL is not found");
+//        var apiError = new ShortenerApiError(String.valueOf(HttpStatus.NOT_FOUND.value()), "Not Found", "The provided URL is not found");
         log.debug(ex.getMessage(), ex);
-        return new ResponseEntity<>(apiError, new HttpHeaders(), HttpStatus.NOT_FOUND);
+//        return new ResponseEntity<>(apiError, new HttpHeaders(), HttpStatus.NOT_FOUND);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(notFoundEndpoint));
+
+        return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 redirect
     }
 
     @ExceptionHandler({InvalidUrlException.class})

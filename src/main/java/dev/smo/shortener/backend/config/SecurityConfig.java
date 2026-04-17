@@ -35,7 +35,8 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.POST, "/books").hasRole("write")
+                                .requestMatchers("/shorturl/id/**").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/shorturl").hasRole("write")
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf.disable())
