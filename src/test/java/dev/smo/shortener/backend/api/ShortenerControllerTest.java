@@ -56,7 +56,7 @@ class ShortenerControllerTest {
     void testCreate() throws Exception {
         var url = "https://www.example.com/test";
         var shortUrl = "1fa";
-        var requestUrl = new RequestUrl(null, url, null);
+        var requestUrl = new RequestUrl(null, url, null, null);
         var keyGeneratorResponse = new KeyGeneratorResponse(4784L, shortUrl);
 
         given(keyGeneratorService.getNextKey()).willReturn(keyGeneratorResponse);
@@ -64,7 +64,7 @@ class ShortenerControllerTest {
         willDoNothing().given(shortUrlCache).setCachedUrl(any(), any(), any());
 
         var id = UUID.randomUUID().toString();
-        given(urlService.save(any(), any(), any())).willReturn(new UrlResponse(id, shortUrl, url, "default", LocalDateTime.now(), LocalDateTime.now()));
+        given(urlService.save(any(), any(), any())).willReturn(new UrlResponse(id, shortUrl, url, "default", "active", LocalDateTime.now(), LocalDateTime.now()));
 
         mockMvc.perform(post("/shorturl")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +78,7 @@ class ShortenerControllerTest {
     @Test
     void testCreateMalformedUrl() throws Exception {
         var url = "https://jlsfjlas.hh-heise.de/jsljflsjfl?kjsflfj=%s/";
-        var requestUrl = new RequestUrl(null, url, null);
+        var requestUrl = new RequestUrl(null, url, null, null);
 
         mockMvc.perform(post("/shorturl")
                         .with(jwt().jwt(jwt -> jwt.subject("john")))
@@ -90,7 +90,7 @@ class ShortenerControllerTest {
     @Test
     void testCreateUrlTooLong() throws Exception {
         var url = "https://example.com/" + "a".repeat(2050);
-        var requestUrl = new RequestUrl(null, url, null);
+        var requestUrl = new RequestUrl(null, url, null, null);
 
         mockMvc.perform(post("/shorturl")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +104,7 @@ class ShortenerControllerTest {
         var shortUrl = "1fa";
         var id = "012345670123456701234567";
 
-        UrlResponse urlResponse = new UrlResponse(id, shortUrl, url, "007", null, null);
+        UrlResponse urlResponse = new UrlResponse(id, shortUrl, url, "007", null, null, null);
         given(urlService.get(any())).willReturn(urlResponse);
 
         mockMvc.perform(get("/shorturl/" + shortUrl)
@@ -123,7 +123,7 @@ class ShortenerControllerTest {
 
         mockMvc.perform(get("/shorturl/" + shortUrl)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isFound());
     }
 
     @Test
@@ -132,7 +132,7 @@ class ShortenerControllerTest {
         var shortUrl = "1fa";
         var id = "012345670123456701234567";
 
-        UrlResponse urlResponse = new UrlResponse(id, shortUrl, url, "007", null, null);
+        UrlResponse urlResponse = new UrlResponse(id, shortUrl, url, "007", "active", null, null);
         given(urlService.get(any())).willReturn(urlResponse);
 
         mockMvc.perform(get("/" + shortUrl))
