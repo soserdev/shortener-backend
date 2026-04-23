@@ -4,159 +4,237 @@
 
 A simple Shortener Backend for a Url Shortener.
 
-This project is based upon:
+* Spring Boot
+* Redis
+* MongoDB
+* Docker & Docker Compose
+* Testcontainers
+* GitHub Actions
 
-- Spring Boot
-- Redis
-- Mongo
-- Docker
-- Testcontainers
-- Github Actions
+### External Dependencies
 
-This project has dependencies to two other services:
+This service depends on:
 
 - [Shortener Urlservice](https://github.com/soserdev/shortener-urlservice)
 - [Shortener Keygenerator](https://github.com/soserdev/shortener-keygenerator)
 
-## Test the API
+## Run the Application  🚀
 
-Shorten url:
+## Docker Compose (Recommended)
 
-```bash
-curl -v -H'Content-Type: application/json' -d'{"url": "https://www.manning.com/books/spring-in-action-sixth-edition"}' http://localhost:8080/shorturl
-```
-
-Get short url - _no redirect_:
-
-```bash
-curl -v http://localhost:8080/shorturl/1fa
-```
-
-Redirect to url:
-
-```bash
-curl -v http://localhost:8080/1fa
-```
-
-
-## Docker Compose
-
-Generate Docker Image for the backend if needed:
-
-```bash
-docker build  -t soserdev/shortener-backend:latest -t soserdev/shortener-backend:0.0.1 -f Dockerfile .
-```
-
-Start the containers for the keygenerator and urlservice:
+Start only dependencies:
 
 ```bash
 docker compose -f compose.yaml up
 ```
 
-Start the containers for the backend, the keygenerator, and the urlservice:
+Start full stack (backend + dependencies):
 
 ```bash
 docker compose -f docker-compose.yaml up
 ```
 
-Stop the containers:
+Stop containers:
 
 ```bash
 docker compose stop
 ```
 
-Stop and remove the containers:
+Remove containers:
 
 ```bash
 docker compose down
 ```
 
-## Dev with Docker Compose
 
-Create short url:
+### Build Docker Image (Backend)
 
 ```bash
-curl -v -H'Content-Type: application/json' -d'{"url": "https://www.manning.com/books"}' http://localhost:8080/shorturl
+docker build -t soserdev/shortener-backend:0.1.4 -f Dockerfile .
 ```
 
-I'd like to check if url is saved in Mongo.
 
-Get containers:
+## Test the API (Quick Start)  🧪
+
+### Create short URL
+
+```bash
+curl -v -H'Content-Type: application/json' \
+-d'{"url": "https://www.manning.com/books/spring-in-action-sixth-edition"}' \
+http://localhost:8080/shorturl
+```
+
+### Get short URL (no redirect)
+
+```bash
+curl -v http://localhost:8080/shorturl/1fa
+```
+
+### Redirect
+
+```bash
+curl -v http://localhost:8080/1fa
+```
+
+### Find all URLs
+
+```bash
+curl -s http://localhost:8080/shorturl | jq
+{
+  "content": [
+    {
+      "id": "69ea3e17b7ce664e554b5eb1",
+      "url": "https://www.manning.com/books",
+      "shortUrl": "1fa",
+      "user": "default",
+      "status": "active",
+      "created": "2026-04-23T15:43:19.977",
+      "updated": "2026-04-23T15:43:19.977"
+    }
+  ],
+  "number": 0,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1,
+  "first": true,
+  "last": true,
+  "numberOfElements": 1,
+  "empty": false
+}
+```
+
+## 📚 API Documentation
+
+Here’s a clean **API overview table** you can drop into your README. It summarizes everything from your controller in a compact, scannable way.
+
+### 📊 API Overview
+
+| Method | Endpoint               | Auth     | Description                 | Request                             | Response                |
+| ------ | ---------------------- | -------- | --------------------------- | ----------------------------------- | ----------------------- |
+| POST   | `/shorturl`            | Optional | Create a new short URL      | `{ "url": "https://..." }`          | `ResponseUrl`           |
+| PUT    | `/shorturl/id/{id}`    | Required | Update URL status           | `{ "url": "...", "status": "..." }` | `ResponseUrl`           |
+| GET    | `/shorturl`            | Required | Get paginated URLs for user | `page, size, sortBy, direction`     | `Page<ResponseUrl>`     |
+| GET    | `/shorturl/{shortUrl}` | No       | Get URL metadata            | path variable                       | `ResponseUrl`           |
+| GET    | `/{shortUrl}`          | No       | Redirect to long URL        | path variable                       | `302 Location redirect` |
+
+
+### 🧠 Notes
+
+* Pagination is **user-scoped** (`Authentication.getName()`)
+* Default paging:
+
+    * `page = 0`
+    * `size = 10`
+    * `sortBy = created`
+    * `direction = desc`
+* Redirect endpoint uses:
+
+    * cache first (Redis)
+    * fallback to URL service
+* Blacklisted URLs are rejected during creation
+* `shortUrl` format: alphanumeric, 3–6 chars
+
+## 🧰 Dev with Docker Compose
+
+Create a short URL:
+
+```bash
+curl -v -H'Content-Type: application/json' \
+-d'{"url": "https://www.manning.com/books"}' \
+http://localhost:8080/shorturl
+```
+
+
+### Check MongoDB data
+
+List containers:
 
 ```bash
 docker ps -a
 ```
 
-Result like:
+Example output:
 
 ```bash
-CONTAINER ID   IMAGE                                    COMMAND                  CREATED          STATUS          PORTS                      NAMES
-0e220b5eae1d   soserdev/shortener-urlservice:latest     "java -noverify -XX:…"   55 seconds ago   Up 52 seconds   0.0.0.0:8082->8080/tcp     shortener-backend-urlservice-1
-c7ca37c87617   mongo:7.0.11                             "docker-entrypoint.s…"   55 seconds ago   Up 53 seconds   0.0.0.0:27017->27017/tcp   shortener-backend-mongo-1
-a22a2143d2f1   soserdev/shortener-keygenerator:latest   "java -jar app.jar"      55 seconds ago   Up 53 seconds   0.0.0.0:8081->8080/tcp     shortener-backend-keygenerator-1
-97a2e074cac8   redis:8.2.2-alpine3.22                   "docker-entrypoint.s…"   55 seconds ago   Up 54 seconds   0.0.0.0:6379->6379/tcp     shortener-backend-redis-1
+CONTAINER ID   IMAGE
+0e220b5eae1d   shortener-urlservice
+c7ca37c87617   mongo:7.0.11
+a22a2143d2f1   shortener-keygenerator
+97a2e074cac8   redis
 ```
 
-Login to pod `mongo:7.0.11`:
+
+## Enter Mongo container
+
 ```bash
-docker exec -it c7ca37c87617 -- sh
+docker exec -it c7ca37c87617 sh
 ```
 
-Login to mongo:
+
+## Connect to Mongo
 
 ```bash
 mongosh -u root -p rootpw
 ```
 
-Get databases:
+
+## MongoDB commands
 
 ```bash
 show dbs
-```
-
-Use db `urlservice`:
-
-```bash
 use urlservice
-```
-
-Show the collections:
-
-```bash
 show collections
 ```
 
-Find all urls:
+Find all URLs:
 
 ```bash
 db.urls.find()
 ```
 
-Find last three inserted urls:
+Latest URLs:
 
 ```bash
 db.urls.find().sort({ created: -1 }).limit(3)
 ```
 
-Find a short url `1fa`:
+Find specific short URL:
 
 ```bash
-urlservice> db.urls.find({ shortUrl: "1fa" })
+db.urls.find({ shortUrl: "1fa" })
 ```
 
-Result:
 
-```bash
-urlservice> db.urls.find({ shortUrl: "1fa" })
-[
-  {
-    _id: ObjectId('68f8972acaba2b2af94d00cd'),
-    shortUrl: '1fa',
-    longUrl: 'https://www.manning.com/books/spring-in-action-sixth-edition',
-    user: 'default',
-    created: ISODate('2025-10-22T08:34:50.070Z'),
-    updated: ISODate('2025-10-22T08:34:50.070Z'),
-    _class: 'dev.smo.shortener.urlservice.model.UrlData'
-  }
-]
+## Example document
+
+```json
+{
+  "_id": "68f8972acaba2b2af94d00cd",
+  "shortUrl": "1fa",
+  "longUrl": "https://www.manning.com/books/spring-in-action-sixth-edition",
+  "user": "default",
+  "created": "2025-10-22T08:34:50.070Z",
+  "updated": "2025-10-22T08:34:50.070Z",
+  "_class": "dev.smo.shortener.urlservice.model.UrlData"
+}
 ```
+
+
+## ⚙️ Architecture Notes
+
+* Redis is used for caching short URL lookups
+* MongoDB stores persistent URL mappings
+* Keygenerator service generates unique short keys
+* Urlservice handles paging, sorting, and filtering
+
+
+## 🧠 Key Features
+
+* URL validation before creation
+* Blacklist protection (e.g. localhost blocking)
+* Cached redirects for performance
+* Per-user URL ownership
+* Pagination support for large datasets
+* JWT or forwarded-user authentication support
+
+

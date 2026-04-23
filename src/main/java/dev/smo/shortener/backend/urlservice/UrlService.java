@@ -3,12 +3,11 @@ package dev.smo.shortener.backend.urlservice;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestClient;
-
-import java.util.List;
 
 @Validated
 @Service
@@ -48,18 +47,30 @@ public class UrlService {
                 .body(UrlResponse.class);
     }
 
-    public List<UrlResponse> findAll(String user) {
+    public PageResponse<UrlResponse> findAll(
+            String user,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
         return restClient.get()
                 .uri(uriBuilder -> {
-                    uriBuilder.path("/api/v1/urls");
-                    if (user != null) {
+                    uriBuilder.path("/api/v1/urls")
+                            .queryParam("page", page)
+                            .queryParam("size", size)
+                            .queryParam("sortBy", sortBy)
+                            .queryParam("direction", direction);
+
+                    if (user != null && !user.isBlank()) {
                         uriBuilder.queryParam("user", user);
                     }
+
                     return uriBuilder.build();
                 })
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<UrlResponse>>() {});
+                .body(new ParameterizedTypeReference<PageResponse<UrlResponse>>() {});
     }
 
     public UrlResponse update(@NotBlank(message = "id should not be null or empty") String id, String user, String status) {
