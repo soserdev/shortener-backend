@@ -18,6 +18,12 @@ This service depends on:
 - [Shortener Urlservice](https://github.com/soserdev/shortener-urlservice)
 - [Shortener Keygenerator](https://github.com/soserdev/shortener-keygenerator)
 
+Additionally there are other parts of the project:
+
+- [Shortener Redirect](https://github.com/soserdev/shortener-redirect) is responsible for redirecting to a long url.
+- [Shortener Frontend](https://github.com/soserdev/shortener-frontend) the frontend written in Angular.
+
+
 ## Run the Application  🚀
 
 ## Docker Compose (Recommended)
@@ -115,7 +121,6 @@ Here’s a clean **API overview table** you can drop into your README. It summar
 | PUT    | `/shorturl/id/{id}`    | Required | Update URL status           | `{ "url": "...", "status": "..." }` | `ResponseUrl`           |
 | GET    | `/shorturl`            | Required | Get paginated URLs for user | `page, size, sortBy, direction`     | `Page<ResponseUrl>`     |
 | GET    | `/shorturl/{shortUrl}` | No       | Get URL metadata            | path variable                       | `ResponseUrl`           |
-| GET    | `/{shortUrl}`          | No       | Redirect to long URL        | path variable                       | `302 Location redirect` |
 
 
 ### 🧠 Notes
@@ -127,10 +132,6 @@ Here’s a clean **API overview table** you can drop into your README. It summar
     * `size = 10`
     * `sortBy = created`
     * `direction = desc`
-* Redirect endpoint uses:
-
-    * cache first (Redis)
-    * fallback to URL service
 * Blacklisted URLs are rejected during creation
 * `shortUrl` format: alphanumeric, 3–6 chars
 
@@ -232,7 +233,7 @@ db.urls.find({ shortUrl: "1fa" })
 
 * URL validation before creation
 * Blacklist protection (e.g. localhost blocking)
-* Cached redirects for performance
+* Cached redirects for performance - see shortener-redirect
 * Per-user URL ownership
 * Pagination support for large datasets
 * JWT or forwarded-user authentication support

@@ -7,7 +7,6 @@ import dev.smo.shortener.backend.service.ShortenerService;
 import dev.smo.shortener.backend.urlservice.PageResponse;
 import dev.smo.shortener.backend.util.UrlUtils;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
