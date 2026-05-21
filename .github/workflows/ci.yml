@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Prevent overlapping release workflows on main
+concurrency:
+  group: main-release
+  cancel-in-progress: false
+
 jobs:
   build-test:
     name: Build and Test
@@ -20,6 +25,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: maven
 
       - name: Build with Maven and Run Integration Tests
         run: mvn verify
@@ -47,7 +53,8 @@ jobs:
       packages: write
 
     # only do release & version bump on main push
-    if: github.event_name == 'push'
+    # skip workflow if commit contains [skip ci]
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
 
     steps:
       - name: Checkout code (full history)
@@ -60,10 +67,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: maven
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
+          #  this is the official noreply email GitHub uses for the github-actions[bot] but you can keep old one
+          # git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # Remove -SNAPSHOT
@@ -98,8 +108,8 @@ jobs:
         with:
           images: ${{ steps.vars.outputs.image_name }}
           tags: |
-            latest
-            ${{ steps.vars.outputs.image_version }}
+            type=raw,value=latest
+            type=raw,value=${{ steps.vars.outputs.image_version }}
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
@@ -124,6 +134,13 @@ jobs:
       - name: Commit and push version bump
         run: |
           git add pom.xml
-          git commit -m "chore: bump version to ${{ steps.next-version.outputs.version }}"
-          git push
 
+          # Exit cleanly if nothing changed
+          git diff --cached --quiet && exit 0
+
+          git commit -m "chore: bump version to ${{ steps.next-version.outputs.version }} [skip ci]"
+
+          # Rebase in case another commit landed on main
+          git pull --rebase origin main
+
+          git push origin HEAD:main
