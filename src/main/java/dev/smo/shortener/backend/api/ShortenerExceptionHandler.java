@@ -7,12 +7,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.util.InvalidUrlException;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +26,20 @@ public class ShortenerExceptionHandler {
     @Value("${app.endpoint.notfound}")
     private String notFoundEndpoint;
 
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleNoResourceFound(
+            NoResourceFoundException ex
+    ) {
+        log.info("404 requested path: {}", ex.getResourcePath());
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 404,
+                "error", "Not Found",
+                "path", ex.getResourcePath()
+        );
+    }
 
     @ExceptionHandler({HttpClientErrorException.NotFound.class, UrlNotFoundException.class})
     public ResponseEntity<Object> handleUrlNotFound(Exception ex, WebRequest request) {
