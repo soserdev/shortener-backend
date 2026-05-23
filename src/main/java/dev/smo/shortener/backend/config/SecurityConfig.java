@@ -35,7 +35,8 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/shorturl/id/**").authenticated()
+                                .requestMatchers("/shorturl/**").authenticated()
+//                                .requestMatchers("/shorturl/id/**").authenticated()
 //                        .requestMatchers(HttpMethod.POST, "/shorturl").hasRole("write")
                         .anyRequest().permitAll()
                 )
